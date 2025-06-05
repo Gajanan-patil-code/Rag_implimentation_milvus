@@ -1,0 +1,463 @@
+flat_docs,hnsw_docs,mmr_docs,answer,query
+,"page_content='location in the embedding vector space. Hence, they are also referred to as hard prompts. On the
+other hand, soft prompts are not confined to fixed, discrete words in natural language and can assume
+any value in the multi-dimensional embedding vector space. In the following figure, words such as
+“jump,” “fox,” and others are hard prompts, whereas the unlabeled black-colored token is a soft prompt.
+Prompt tuning process
+In prompt tuning, soft prompts, also known as virtual tokens, are concatenated with the prompts;
+it’s left to a supervised training process to determine the optimal values. As shown in the following
+figure, these trainable soft tokens are prepended to an embedding vector representation – in this case,
+“The student learns science:”
+Figure 3.8 – Soft prompt concatenation
+The following figure provides a more detailed representation of the process. Vectors are attached to
+the beginning of each embedded input vector and fed into the model, the prediction is compared
+to the target to calculate a loss, and the error is backpropagated to calculate gradients, but only the
+new learnable vectors are updated, keeping the core model frozen. In other words, we are searching
+the embedding space for the best representation of the prompt that the LLMs should accept. Even
+though we can’t easily understand soft prompts learned this way, they can help us figure out how to
+do a task using the labeled dataset, doing the same job as text prompts written by hand but without
+being limited to specific words or phrases:
+Figure 3.9 – Prompt tuning process (detailed)
+Techniques for fine-tuning models 61
+Next, we’ll compare three methods: model tuning (full fine-tuning), prompt tuning, and prompt design
+(prompt engineering). As shown in Figure 3.10, research conducted by Google shows the difference
+between model tuning, prompt tuning, and prompt design (Guiding Frozen Language Models with
+Learned Soft Prompts, QUINTA-FEIRA, FEVEREIRO 10, 2022, posted by Brian Lester, AI Resident,
+and Noah Constant, Senior Staff Software Engineer, Google Research).
+Model tuning (full fine-tuning):
+• This method starts with a pre-trained model that is then further trained (or “tuned”) on a
+specific task using additional input data. The model becomes more specialized in this process.
+• This method represents “strong task performance” as the model gets more aligned with the
+particular task.
+Prompt tuning:
+• Instead of tuning the entire model, only the prompt or input to the model is adjusted. The main
+model remains “frozen” or unchanged.
+• This introduces the concept of “tunable soft prompts,” which can be adjusted to get desired
+outputs from the model.
+• This method combines the general capabilities of the pre-trained model with a more task-
+specific approach, leading to “efficient multitask serving.”
+Prompt design (prompt engineering):
+• The focus is on designing a very specific input or prompt to guide the pre-trained model to
+produce the desired output.' metadata={'pk': 458312173011974297}
+---
+page_content='specific approach, leading to “efficient multitask serving.”
+Prompt design (prompt engineering):
+• The focus is on designing a very specific input or prompt to guide the pre-trained model to
+produce the desired output.
+• Like prompt tuning, the main model remains “frozen”.
+• This method is about exploiting the vast knowledge and capabilities of the pre-trained model
+by just crafting the right input. As mentioned earlier, we will cover prompt engineering in
+detail in Chapter 5.
+In prompt tuning and prompt design, original model weights remain frozen, whereas in model tuning
+model parameters are updated:
+62 Fine-Tuning – Building Domain-Specific LLM Applications
+Figure 3.10 – Model tuning, prompt tuning, and prompt design
+The following figure demonstrates model tuning (full fine-tuning) on the left and prompt tuning on
+the right. Tuning a model for a specific task necessitates creating a task-specific version of the entire
+pre-trained model for each downstream task, and separate batches of data must be used for inference.
+On the other hand, prompt tuning only necessitates storing a small, task-specific prompt for each task,
+allowing for mixed-task inference using the original pre-trained model. With a T5 “XXL” model, each
+tuned version of the model necessitates 11 billion parameters. In comparison, our tuned prompts only
+necessitate 20,480 parameters for each task, which is a reduction of over five orders of magnitude,
+assuming a prompt length of 5 tokens:
+Figure 3.11 – Model tuning versus prompt tuning
+Techniques for fine-tuning models 63
+Now, let’s look at the benefits of prompt tuning compared to prompt engineering and model fine-tuning:
+• Compared to model fine-tuning, prompt tuning does not require copies of the LLMs to be
+created for every task, thus resulting in a reduction in storage space
+• Compared to few-shot prompt engineering, prompt tuning is not restricted to context length
+or a limited number of examples
+• Instead of crafting the best manual prompt to generate the desired output, you can use
+backpropagation to automatically learn a new model
+• Resilient to domain shift
+The research paper The Power of Scale for Parameter-Efficient Prompt Tuning from Google highlights
+the experiment (Figure 3.12) that was conducted on the T5 Transformer model. As per the evaluation,
+prompt tuning on the T5 model matched the quality of model tuning (or fine-tuning) as size increases,
+while enabling the reuse of a single frozen model for all tasks. This approach significantly outperforms
+few-shot prompt designs using GPT-3. SuperGLUE is a benchmark that’s designed to comprehensively
+evaluate the performance of various natural language understanding models across a range of challenging
+language tasks. We will learn more about SuperGLUE in the upcoming sections of this chapter:
+Figure 3.12 – Relationship between SuperGLUE Score and Model Parameters
+Figure 3.12 shows the relationship between SuperGLUE Score and Model Parameters for different fine-' metadata={'pk': 458312173011974298}
+---
+page_content='Figure 5.11 – Taxonomy of prompt engineering techniques across multiple application domains
+Prompt engineering best practices
+In the following list, we outline additional best practices to optimize and enhance your experience
+with prompt creation:
+• Clarity and precision for accurate responses: Ensure that prompts are clear, concise, and
+specific, avoiding ambiguity or multiple interpretations:
+Bad Prompt Good Prompt
+Tell me about World War 1 How did World War 1 start, and who won it?
+Figure 5.12 – Best practice: clarity and precision
+Techniques for effective prompt engineering 121
+• Descriptive: Be descriptive so that ChatGPT can understand your intent:
+Bad Prompt Good Prompt
+Write a poem about India. Write a poem about India focusing on its cultural diversity,
+deciduous cuisine, beautiful wildlife, nature, technology innovation,
+and film industry.
+Figure 5.13 – Best practice: be descriptive
+• Format the output: Mention the format of the output, which can be bullet points, paragraphs,
+sentences, tables, and languages, such as XML, HTML, and JSON. Use examples to articulate
+the desired output.
+• Adjust the Temperature and Top_p parameters for creativity: As indicated in the parameters
+section, modifying the Temperatures and Top_p can significantly influence the variability of
+the model’s output. In scenarios that call for creativity and imagination, raising the temperature
+proves beneficial. On the other hand, when dealing with legal applications that demand a
+reduction in hallucinations, a lower temperature becomes advantageous.
+• Use syntax as separators in prompts: In this example, for a more effective output, use “”” or
+### to separate instruction and input data:
+Example:
+Convert the text below to Spanish
+Text: “””
+{text input here}
+“””
+• Order of the prompt elements matter: It has been found, in certain instances, that giving an
+instruction before an example can improve the quality of your outputs. Additionally, the order
+of examples can affect the output of prompts.
+• Use guiding words: This helps steer the model toward a specific structure, such as the text
+highlighted in the following:
+Example:
+# Create a basic Python function that
+# 1. Requests the user to enter a temperature in Celsius
+# 2. Converts the Celsius temperature to Fahrenheit
+def ctf():
+122 Effective Prompt Engineering Techniques: Unlocking Wisdom Through AI
+• Instead of saying what not to provide, give alternative recommendations: Provide an alternative
+path if ChatGPT is unable to perform a task, such as in the following highlighted message:
+Example:
+System Message: You are an AI nutrition consultant that provides nutrition consultation based
+on health and wellness goals of the customer Please note that any questions or inquiries beyond
+the scope of nutrition consultation will NOT be answered and instead will receive the response:
+“Sorry! This question falls outside my domain of expertise!”
+Customer: How do I invest in 401K?' metadata={'pk': 458312173011974341}
+---
+page_content='strategically engineering prompts, one can influence the generated outputs and improve the overall
+performance and usefulness of the system. In this section, we will learn about the necessary elements
+of effective prompt design, prompt engineering techniques, best practices, bonus tips, and tricks.
+Elements of a good prompt design
+Designing a good prompt is important because it significantly influences the output of a language model
+such as GPT. The prompt provides the initial context, sets the task, guides the style and structure of the
+response, reduces ambiguities and hallucinations, and supports the optimization of resources, thereby
+reducing costs and energy use. In this section, let’s understand the elements of good prompt design.
+The foundational elements of a good prompt include instructions, questions, input data, and examples:
+• Instructions: The instructions in a prompt refer to the specific guidelines or directions given
+to a language model within the input text to guide the kind of response it should produce.
+• Questions: Questions in a prompt refer to queries or interrogative statements that are included
+in the input text. The purpose of these questions is to instruct the language model to provide
+a response or an answer to the query. In order to obtain the results, either the question or
+instruction is mandatory.
+What is prompt engineering? 113
+• Input data: The purpose of input data is to provide any additional supporting context when
+prompting the LLM. It could be used to provide new information the model has not previously
+been trained on for more personalized experiences.
+• Examples: The purpose of examples in a prompt is to provide specific instances or scenarios
+that illustrate the desired behavior or response from ChatGPT. You can input a prompt that
+includes one or more examples, typically in the form of input-output pairs.
+The following table shows how to build effective prompts using the aforementioned prompt elements:
+Sample Example
+Prompt Formula
+Questions + How should I create a healthy meal plan for a week?
+Instructions
+Include a variety of nutrients and food groups, and explain the benefits
+of each meal choice.
+Instructions + Provide a punchy title in less than 5 words for the paragraph below.
+Input Data
+{Jake finally took his brand-new Tesla for a spin on the coastal highway,
+the smooth hum of the electric motor filling the air as the scenic ocean
+views passed by.}
+Examples + Question I enjoy movies such as Star Wars, Matrix, and Transformers.
+What other movies would you recommend?
+Figure 5.5 – Sample Prompt formula consisting of prompt elements with examples
+Prompt parameters
+ChatGPT prompt parameters are variables that you can set in the API calls. They allow users to
+influence the model’s output, customizing the behavior of the model to better fit specific applications
+or contexts. The following table shows some of the most important parameters of a ChatGPT API call:
+Parameter Description Effect and Usage' metadata={'pk': 458312173011974336}
+---
+page_content='factors among these methods. PEFT techniques can be broadly classified into three categories:
+• Selective
+• Additive
+• Reparameterization
+The following figure shows 30 PEFT methods that were discussed in 40 research papers published
+between February 2019 and February 2023:
+Figure 3.6 – PEFT methods that were discussed in research papers published between 2019 and 2023
+This diagram was taken from a survey published in the paper Scale Down to Scale Up: A Guide to
+Parameter-Efficient Tuning.
+We will dive into each of these categories in this section but only cover the most important PEFT
+techniques that have shown promising results.
+Techniques for fine-tuning models 59
+Additive
+The core concept of additive methods involves fine-tuning a model by adding extra parameters or
+layers, exclusively training these new parameters, and keeping the original model weights frozen.
+Although these techniques introduce new parameters to the network, they effectively reduce training
+times and increase memory efficiency by decreasing the size of gradients and the optimizer states. This
+is the most widely explored category of PEFT methods. A prominent method under this category is
+prompt tuning with soft prompts.
+Prompt tuning with soft prompts
+This type of tuning involves freezing the model weights and updating the prompt parameters instead
+of model parameters like in model fine-tuning. When you freeze the weights of a model, you prevent
+them from being updated during training. These weights remain the same throughout the fine-
+tuning process. It is a very compute and energy-efficient technique compared to traditional fine-
+tuning. Prompt tuning should not be confused with prompt engineering, which we will discuss in
+Chapter 5. To understand prompt tuning better, we need to understand the concept of soft prompts
+and embedding space.
+Soft prompts and embedding space
+An embedding vector space is a high-dimensional space where words, phrases, or other types of data
+are represented as vectors such that semantically similar items are located close to each other in the
+space. In the context of natural language processing, these embeddings capture semantic meanings
+and relationships between words or sentences, allowing for operations that can infer similarities,
+analogies, and other linguistic patterns.
+Figure 3.7 – Soft prompts versus hard prompts
+60 Fine-Tuning – Building Domain-Specific LLM Applications
+The above figure depicts a 3D embedding vector space along the X, Y, and Z axes. Representing natural
+language through tokens is considered to be challenging because each token is associated with a specific
+location in the embedding vector space. Hence, they are also referred to as hard prompts. On the
+other hand, soft prompts are not confined to fixed, discrete words in natural language and can assume
+any value in the multi-dimensional embedding vector space. In the following figure, words such as' metadata={'pk': 458312173011974296}","page_content='location in the embedding vector space. Hence, they are also referred to as hard prompts. On the
+other hand, soft prompts are not confined to fixed, discrete words in natural language and can assume
+any value in the multi-dimensional embedding vector space. In the following figure, words such as
+“jump,” “fox,” and others are hard prompts, whereas the unlabeled black-colored token is a soft prompt.
+Prompt tuning process
+In prompt tuning, soft prompts, also known as virtual tokens, are concatenated with the prompts;
+it’s left to a supervised training process to determine the optimal values. As shown in the following
+figure, these trainable soft tokens are prepended to an embedding vector representation – in this case,
+“The student learns science:”
+Figure 3.8 – Soft prompt concatenation
+The following figure provides a more detailed representation of the process. Vectors are attached to
+the beginning of each embedded input vector and fed into the model, the prediction is compared
+to the target to calculate a loss, and the error is backpropagated to calculate gradients, but only the
+new learnable vectors are updated, keeping the core model frozen. In other words, we are searching
+the embedding space for the best representation of the prompt that the LLMs should accept. Even
+though we can’t easily understand soft prompts learned this way, they can help us figure out how to
+do a task using the labeled dataset, doing the same job as text prompts written by hand but without
+being limited to specific words or phrases:
+Figure 3.9 – Prompt tuning process (detailed)
+Techniques for fine-tuning models 61
+Next, we’ll compare three methods: model tuning (full fine-tuning), prompt tuning, and prompt design
+(prompt engineering). As shown in Figure 3.10, research conducted by Google shows the difference
+between model tuning, prompt tuning, and prompt design (Guiding Frozen Language Models with
+Learned Soft Prompts, QUINTA-FEIRA, FEVEREIRO 10, 2022, posted by Brian Lester, AI Resident,
+and Noah Constant, Senior Staff Software Engineer, Google Research).
+Model tuning (full fine-tuning):
+• This method starts with a pre-trained model that is then further trained (or “tuned”) on a
+specific task using additional input data. The model becomes more specialized in this process.
+• This method represents “strong task performance” as the model gets more aligned with the
+particular task.
+Prompt tuning:
+• Instead of tuning the entire model, only the prompt or input to the model is adjusted. The main
+model remains “frozen” or unchanged.
+• This introduces the concept of “tunable soft prompts,” which can be adjusted to get desired
+outputs from the model.
+• This method combines the general capabilities of the pre-trained model with a more task-
+specific approach, leading to “efficient multitask serving.”
+Prompt design (prompt engineering):
+• The focus is on designing a very specific input or prompt to guide the pre-trained model to
+produce the desired output.' metadata={'pk': 458312173011767862}
+---
+page_content='Parity AI 228 prompts 43, 44, 197
+URL 228 Proof of Concept (PoC) 31
+personas 134 provisioned throughput units
+Phi-2 250 (PTUs) 164-167
+planners 134
+plugins 134 Q
+Power BI Copilot 132
+pre-training 54-56 quantization-based indexes 84
+privacy 197
+in cloud 197 R
+program-aided language (PAL) models 119
+prompt and completion sequence, phases Rate Limiting Policy
+additional prompt engineering 45 in Azure API Management 171
+encoded input 45 rate limits 163
+encoded output and tokenizer 45 Recall-Oriented Understudy for Gisting
+input prompt 45 Evaluation (ROUGE) 69
+input text 45 example 69, 70
+output/completion 45 variants 69
+summarization model 45 recurrent neural networks (RNNs) 37
+tokenizer 45 drawbacks 37
+prompt design elements red-teaming 198, 199
+instructions 112 reinforcement learning from human
+questions 112 feedback (RLHF) 51, 66
+prompt engineering 43, 112 human feedback 67
+best practices 120-122 Kullback-Leibler (KL) 68
+Chain-of-thought (CoT) prompting 118 reward hacking 68
+ChatGPT prompts 108 reward model 67
+ChatGPT roles 114 RL 66, 67
+completions 108 RL algorithm 67
+elements, of prompt design 112, 113 reinforcement learning (RL) 66
+essentials 108 reparameterization 64
+ethical guidelines 123-125 reporting 203
+N-shot prompting 117, 118 request for proposal (RFP) responses 20
+program-aided language (PAL) models 119 request per minute (RPM) 164, 165
+prompt parameters 113, 114 response 197
+techniques 117 responsible AI 208
+tips and tricks 123 applications, building with 218
+prompt injections 187-189 examples 209, 210
+startup ecosystem 228-230
+Index 267
+responsible AI principles 210 Semantic Kernel (SK) 129, 133, 137
+accountability 212 Sentinel
+ethical and explainable 211 URL 217
+fairness and inclusiveness 211 service-level agreements (SLAs) 163
+LLM challenges, addressing with 212 service principal name (SPN) 195
+privacy and security 212 shared responsibility 185
+reliability and safety 211 similarity measures 87
+transparency 212 similarity metrics 87
+Responsible AI team 125 small language models (SLMs) 250
+retries, with exponential backoff 169-171 architecture 250
+retrieval-augmented generation benefits 250
+(RAG) 51, 79, 97, 137 examples 250
+business applications 99 Phi-2 250
+evaluating, with Azure Prompt Flow 103 soft prompts 59, 60
+reward hacking 68 software development kit (SDK) 133
+Ride-Sharing App Matchmaking 91 SORA 26
+outcome 91 specialized chunking 101
+preprocessing and indexing 91 SQL injection 188
+retrieval time 91 Stable Diffusion 22
+rule-based chatbots 6 Stable Video Diffusion 26
+limitations 6, 7 startup ecosystem, in RAI
+Arthur 229
+S Datagen 229
+Fiddler 228
+scaling 163 Galileo and Snorkel AI 229
+security controls Parity AI 228
+applying, in organization 193 Weights and Biases 229
+content filtering 193, 194 SuperGLUE 71
+key management system 195 URL 71
+managed identities 195 support 177
+security threats 186 system 109
+denial of service (DoS) 186, 187 system message 114
+insecure output handling 191, 192' metadata={'pk': 458312173011768020}
+---
+page_content='Figure 5.11 – Taxonomy of prompt engineering techniques across multiple application domains
+Prompt engineering best practices
+In the following list, we outline additional best practices to optimize and enhance your experience
+with prompt creation:
+• Clarity and precision for accurate responses: Ensure that prompts are clear, concise, and
+specific, avoiding ambiguity or multiple interpretations:
+Bad Prompt Good Prompt
+Tell me about World War 1 How did World War 1 start, and who won it?
+Figure 5.12 – Best practice: clarity and precision
+Techniques for effective prompt engineering 121
+• Descriptive: Be descriptive so that ChatGPT can understand your intent:
+Bad Prompt Good Prompt
+Write a poem about India. Write a poem about India focusing on its cultural diversity,
+deciduous cuisine, beautiful wildlife, nature, technology innovation,
+and film industry.
+Figure 5.13 – Best practice: be descriptive
+• Format the output: Mention the format of the output, which can be bullet points, paragraphs,
+sentences, tables, and languages, such as XML, HTML, and JSON. Use examples to articulate
+the desired output.
+• Adjust the Temperature and Top_p parameters for creativity: As indicated in the parameters
+section, modifying the Temperatures and Top_p can significantly influence the variability of
+the model’s output. In scenarios that call for creativity and imagination, raising the temperature
+proves beneficial. On the other hand, when dealing with legal applications that demand a
+reduction in hallucinations, a lower temperature becomes advantageous.
+• Use syntax as separators in prompts: In this example, for a more effective output, use “”” or
+### to separate instruction and input data:
+Example:
+Convert the text below to Spanish
+Text: “””
+{text input here}
+“””
+• Order of the prompt elements matter: It has been found, in certain instances, that giving an
+instruction before an example can improve the quality of your outputs. Additionally, the order
+of examples can affect the output of prompts.
+• Use guiding words: This helps steer the model toward a specific structure, such as the text
+highlighted in the following:
+Example:
+# Create a basic Python function that
+# 1. Requests the user to enter a temperature in Celsius
+# 2. Converts the Celsius temperature to Fahrenheit
+def ctf():
+122 Effective Prompt Engineering Techniques: Unlocking Wisdom Through AI
+• Instead of saying what not to provide, give alternative recommendations: Provide an alternative
+path if ChatGPT is unable to perform a task, such as in the following highlighted message:
+Example:
+System Message: You are an AI nutrition consultant that provides nutrition consultation based
+on health and wellness goals of the customer Please note that any questions or inquiries beyond
+the scope of nutrition consultation will NOT be answered and instead will receive the response:
+“Sorry! This question falls outside my domain of expertise!”
+Customer: How do I invest in 401K?' metadata={'pk': 458312173011767906}
+---
+page_content='factors among these methods. PEFT techniques can be broadly classified into three categories:
+• Selective
+• Additive
+• Reparameterization
+The following figure shows 30 PEFT methods that were discussed in 40 research papers published
+between February 2019 and February 2023:
+Figure 3.6 – PEFT methods that were discussed in research papers published between 2019 and 2023
+This diagram was taken from a survey published in the paper Scale Down to Scale Up: A Guide to
+Parameter-Efficient Tuning.
+We will dive into each of these categories in this section but only cover the most important PEFT
+techniques that have shown promising results.
+Techniques for fine-tuning models 59
+Additive
+The core concept of additive methods involves fine-tuning a model by adding extra parameters or
+layers, exclusively training these new parameters, and keeping the original model weights frozen.
+Although these techniques introduce new parameters to the network, they effectively reduce training
+times and increase memory efficiency by decreasing the size of gradients and the optimizer states. This
+is the most widely explored category of PEFT methods. A prominent method under this category is
+prompt tuning with soft prompts.
+Prompt tuning with soft prompts
+This type of tuning involves freezing the model weights and updating the prompt parameters instead
+of model parameters like in model fine-tuning. When you freeze the weights of a model, you prevent
+them from being updated during training. These weights remain the same throughout the fine-
+tuning process. It is a very compute and energy-efficient technique compared to traditional fine-
+tuning. Prompt tuning should not be confused with prompt engineering, which we will discuss in
+Chapter 5. To understand prompt tuning better, we need to understand the concept of soft prompts
+and embedding space.
+Soft prompts and embedding space
+An embedding vector space is a high-dimensional space where words, phrases, or other types of data
+are represented as vectors such that semantically similar items are located close to each other in the
+space. In the context of natural language processing, these embeddings capture semantic meanings
+and relationships between words or sentences, allowing for operations that can infer similarities,
+analogies, and other linguistic patterns.
+Figure 3.7 – Soft prompts versus hard prompts
+60 Fine-Tuning – Building Domain-Specific LLM Applications
+The above figure depicts a 3D embedding vector space along the X, Y, and Z axes. Representing natural
+language through tokens is considered to be challenging because each token is associated with a specific
+location in the embedding vector space. Hence, they are also referred to as hard prompts. On the
+other hand, soft prompts are not confined to fixed, discrete words in natural language and can assume
+any value in the multi-dimensional embedding vector space. In the following figure, words such as' metadata={'pk': 458312173011767861}
+---
+page_content='• How to evaluate fine-tuned model performance
+• Real-life examples of fine-tuning success – InstructGPT
+52 Fine-Tuning – Building Domain-Specific LLM Applications
+Figure 3.1 – AI not fine-tuned for social interactions
+What is fine-tuning and why does it matter?
+Issues inherent in general LLMs such as GPT-3 include their tendency to produce outputs that are
+false, toxic content, or negative sentiments. This is attributed to the training of LLMs, which focuses
+on predicting subsequent words from vast internet text, rather than securely accomplishing the user’s
+intended language task. In essence, these models lack alignment with their users’ objectives.
+Let’s look at three cases that I found in the first half of 2023 that demonstrate ChatGPT’s
+hallucination problems.
+Case 1 – an American law professor was falsely accused of being a sexual offender by ChatGPT, with
+the generated response referencing a non-existent Washington News report. If this misinformation had
+gone unnoticed, it could have had severe and irreparable consequences for the professor’s reputation
+(source: https://www.firstpost.com/world/chatgpt-makes-up-a-sexual-
+harassment-scandal-names-real-professor-as-accused-12418552.html).
+Case 2 – a lawyer used ChatGPT in court and cited fake cases. A lawyer used ChatGPT to help with
+an airline lawsuit. The AI suggested fake cases, which the lawyer unknowingly presented in court. This
+mistake led a judge to consider sanctions and has drawn attention to AI “hallucinations” in legal settings
+(source: https://www.forbes.com/sites/mollybohannon/2023/06/08/lawyer-
+used-chatgpt-in-court-and-cited-fake-cases-a-judge-is-considering-
+sanctions/?sh=2f13a6c77c7f).
+Case 3 – ChatGPT can fabricate information. According to ChatGPT, The New York Times first
+reported on “artificial intelligence” on July 10, 1956, in an article titled Machines Will Be Capable
+of Learning, Solving Problems, Scientists Predict. However, it’s crucial to note that while the 1956
+Dartmouth College conference mentioned in the response was real, the article itself did not exist;
+ChatGPT generated this information. This highlights how ChatGPT can not only provide incorrect
+What is fine-tuning and why does it matter? 53
+information but also fabricate details, including names, dates, medical explanations, book plots, internet
+addresses, and even historical events that never occurred (source: https://www.nytimes.
+com/2023/05/01/business/ai-chatbots-hallucination.html).
+Note
+The aforementioned hallucination problems occurred in the first half of 2023. Since then,
+OpenAI has put strict measures and hallucination mitigation systems in place.
+To curb hallucinations, fine-tuning is one of the potential options besides prompt engineering and
+RAG techniques, both of which we will discuss in later chapters. As highlighted previously, fine-tuning
+tailors LLMs for specific tasks or domains. In LLMs, weights refer to the parameters of the neural' metadata={'pk': 458312173011767856}","Prompt tuning can be categorized into two main types:
+
+1. **Hard Prompts**: These are fixed, discrete words or phrases in natural language that are used as prompts. They are associated with specific locations in the embedding vector space and are often manually crafted.
+
+2. **Soft Prompts**: Also known as virtual tokens, these are not confined to specific words or phrases in natural language. Instead, they can assume any value in the multi-dimensional embedding vector space. Soft prompts are trainable and are optimized during a supervised training process to determine the best representation for a given task. They are concatenated with the input and the model is trained to adjust these prompts while keeping the core model frozen.",Give types of prompt tuning?
